@@ -1,0 +1,5 @@
+.DS_Store
+.cache/
+.matplotlib-cache/
+__pycache__/
+*.py[cod]

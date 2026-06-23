@@ -1,0 +1,6 @@
+numpy
+scipy
+matplotlib
+mediapy
+mjlab>=1.1.1
+torch
