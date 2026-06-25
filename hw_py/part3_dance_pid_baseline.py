@@ -69,22 +69,6 @@ FULL_STABLE_HEIGHT = 0.68
 def _make_pid_env_cfg():
   env_cfg = _make_tracking_env_cfg(play=True)
   env_cfg.scene.num_envs = 1
-
-  # This is an open-loop reference/PID baseline, not a trained robust policy.
-  # Remove training-time randomization so the baseline measures controller
-  # behavior instead of disturbance rejection.
-  for name in ("foot_friction", "encoder_bias", "base_com", "randomize_terrain"):
-    env_cfg.events.pop(name, None)
-  reset_base = env_cfg.events.get("reset_base")
-  if reset_base is not None:
-    reset_base.params["pose_range"] = {
-      "x": (0.0, 0.0),
-      "y": (0.0, 0.0),
-      "z": (0.0, 0.0),
-      "yaw": (0.0, 0.0),
-    }
-    reset_base.params["velocity_range"] = {}
-  env_cfg.episode_length_s = 20.0
   return env_cfg
 
 
