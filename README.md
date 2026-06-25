@@ -5,7 +5,7 @@
 实验分为两个系统：
 
 - `DifferentialDrivePathTracking-master/`：差速驱动小车路径跟踪实验，在低维运动学模型上实现并比较 PID、PPO、PID + residual PPO。
-- `hw_py/` 与 `hw_mjlab/`：Unitree G1 人形机器人实验，在 MuJoCo/mjlab 环境中实现速度行走和单段舞蹈动作跟踪。
+- `scripts/` 与 `mjlab/`：Unitree G1 人形机器人实验，在 MuJoCo/mjlab 环境中实现单段舞蹈动作跟踪。
 
 ## Repository Layout
 
@@ -19,17 +19,16 @@
 │   ├── Parkour.py                      # 原项目可视化辅助代码
 │   ├── outputs/                        # 差速小车实验图像、模型和误差曲线
 │   └── README.md                       # 原差速小车项目说明
-├── hw_py/
-│   ├── part1_ppo.py                    # 原 homework 的 NumPy PPO 基础练习
-│   ├── part2_walk.py                   # Unitree G1 速度行走 PPO 训练与评估
-│   ├── part3_dance_single.py           # Unitree G1 单段舞蹈 PPO 跟踪
-│   ├── part3_dance_pid_baseline.py     # Unitree G1 舞蹈 PID/PD baseline 与 hybrid 评估入口
+├── scripts/
+│   ├── ppo.py                          # 原 homework 的 NumPy PPO 基础练习
+│   ├── dance_single.py                 # Unitree G1 单段舞蹈 PPO 跟踪
+│   ├── dance_pid_baseline.py           # Unitree G1 舞蹈 PID/PD baseline 与 hybrid 评估入口
+│   ├── dance_pid_residual_ppo.py       # Unitree G1 PID + residual PPO
 │   ├── motion/g1_hiphop_tracking.npz   # G1 hiphop 参考动作数据
 │   ├── outputs/                        # G1 舞蹈 PID / PPO / hybrid 对比输出
-│   ├── part2_model_final.pt            # G1 行走训练结果
-│   └── part3_model_final.pt            # G1 舞蹈 PPO 训练结果
-├── hw_mjlab/
-│   ├── walk/                           # Unitree G1 行走环境配置
+│   ├── model_final.pt                  # G1 舞蹈 PPO 训练结果
+│   └── pid_residual_model_final.pt     # G1 舞蹈 residual PPO 训练结果
+├── mjlab/
 │   ├── dance/                          # Unitree G1 舞蹈跟踪环境配置
 │   ├── tracking_rewards.py             # 速度/动作跟踪 reward 工具
 │   ├── train.py                        # rsl_rl PPO 训练封装
@@ -94,55 +93,37 @@ python DifferentialDrivePathTracking-master/ppo_pid_residual_path_tracking.py
 - `DifferentialDrivePathTracking-master/outputs/ppo_pid_residual_commands.png`
 - `DifferentialDrivePathTracking-master/outputs/ppo_pid_residual_training_reward.png`
 
-### 4. Unitree G1: Velocity Walking with PPO
+### 4. Unitree G1: Single Dance Tracking with PPO
 
 入口文件：
 
 ```shell
-python -m hw_py.part2_walk
+python -m scripts.dance_single
 ```
 
-该实验使用 mjlab 中的 Unitree G1 模型进行平地速度行走。策略接收本体状态、指令速度、速度误差和平衡上下文，通过 PPO 学习跟踪 `(v_x, v_y, omega_z)` 指令。
+该实验使用 `scripts/motion/g1_hiphop_tracking.npz` 作为参考动作。策略观测相位条件下的参考关节状态、根部速度误差和机器人本体状态，通过多项 tracking reward 学习单段舞蹈动作跟踪。
 
 主要输出：
 
-- `hw_py/part2_model_final.pt`
-- `hw_py/part2_walk_LinVel_error.png`
-- `hw_py/part2_walk_video.mp4`
-
-当前固定评估命令为向前速度 `1.0 m/s`。
-
-### 5. Unitree G1: Single Dance Tracking with PPO
-
-入口文件：
-
-```shell
-python -m hw_py.part3_dance_single
-```
-
-该实验使用 `hw_py/motion/g1_hiphop_tracking.npz` 作为参考动作。策略观测相位条件下的参考关节状态、根部速度误差和机器人本体状态，通过多项 tracking reward 学习单段舞蹈动作跟踪。
-
-主要输出：
-
-- `hw_py/part3_model_final.pt`
-- `hw_py/part3_dance_single_error.png`
-- `hw_py/part3_dance_single_video.mp4`
+- `scripts/model_final.pt`
+- `scripts/dance_single_error.png`
+- `scripts/dance_single_video.mp4`
 
 也可以使用已有 checkpoint 直接评估：
 
 ```shell
 conda run --no-capture-output -n mjlab python - <<'PY'
-from hw_py.part3_dance_single import play
-play("hw_py/part3_model_final.pt")
+from scripts.dance_single import play
+play("scripts/model_final.pt")
 PY
 ```
 
-### 6. Unitree G1: PID/PD Dance Baseline and Hybrid Evaluation
+### 5. Unitree G1: PID/PD Dance Baseline and Hybrid Evaluation
 
 入口文件：
 
 ```shell
-conda run --no-capture-output -n mjlab python hw_py/part3_dance_pid_baseline.py
+conda run --no-capture-output -n mjlab python scripts/dance_pid_baseline.py
 ```
 
 该文件包含两个用途：
@@ -152,11 +133,11 @@ conda run --no-capture-output -n mjlab python hw_py/part3_dance_pid_baseline.py
 
 主要输出：
 
-- `hw_py/outputs/part3_dance_pid_error.png`
-- `hw_py/outputs/part3_dance_pid_video.mp4`
-- `hw_py/outputs/part3_dance_hybrid_pid_error.png`
-- `hw_py/outputs/part3_dance_hybrid_pid_video.mp4`
-- `hw_py/outputs/g1_ppo_vs_hybrid_pid_tracking_error.png`
+- `scripts/outputs/dance_pid_error.png`
+- `scripts/outputs/dance_pid_video.mp4`
+- `scripts/outputs/dance_hybrid_pid_error.png`
+- `scripts/outputs/dance_hybrid_pid_video.mp4`
+- `scripts/outputs/g1_ppo_vs_hybrid_pid_tracking_error.png`
 
 ## Installation
 
@@ -191,5 +172,5 @@ conda activate mjlab
 
 - 差速小车部分是低维运动学实验，适合观察 PID、PPO 和 residual learning 在路径跟踪误差上的差异。
 - Unitree G1 部分是高自由度全身控制实验，控制难点从二维路径跟踪扩展到动态平衡、关节耦合和参考动作可行性。
-- `hw_py/` 里保留了原 homework 的三个 part，但当前项目重点已经扩展为“两类具身平台，三种控制方案”的对比实验。
+- `scripts/` 保留了原 homework 的 NumPy PPO 基础练习，并扩展了 Unitree G1 舞蹈跟踪实验。
 - `outputs/` 和各子目录中的 `outputs/` 保存了已生成的误差曲线、路径图和视频，便于直接查看实验结果。
