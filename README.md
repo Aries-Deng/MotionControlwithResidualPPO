@@ -32,6 +32,7 @@
 ├── mjlab/
 │   ├── dance/                          # Unitree G1 舞蹈跟踪环境配置
 │   ├── tracking_rewards.py             # 速度/动作跟踪 reward 工具
+│   ├── rl_cfg.py                       # rsl_rl PPO 配置生成工具
 │   ├── train.py                        # rsl_rl PPO 训练封装
 │   └── evaluate.py                     # rollout、误差图和视频导出工具
 ├── outputs/                            # homework 根目录输出备份
